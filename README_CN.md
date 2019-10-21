@@ -1,45 +1,42 @@
 <p align="center">
   <img src="flutter_boost.png">
-   <b></b><br>
-  <a href="README_CN.md">中文文档</a>
-  <a href="https://mp.weixin.qq.com/s?__biz=MzU4MDUxOTI5NA==&mid=2247484367&idx=1&sn=fcbc485f068dae5de9f68d52607ea08f&chksm=fd54d7deca235ec86249a9e3714ec18be8b2d6dc580cae19e4e5113533a6c5b44dfa5813c4c3&scene=0&subscene=131&clicktime=1551942425&ascene=7&devicetype=android-28&version=2700033b&nettype=ctnet&abtest_cookie=BAABAAoACwASABMABAAklx4AVpkeAMSZHgDWmR4AAAA%3D&lang=zh_CN&pass_ticket=1qvHqOsbLBHv3wwAcw577EHhNjg6EKXqTfnOiFbbbaw%3D&wx_header=1">中文介绍</a>
 </p>
+
 
 # Release Note
 
-Please checkout the release note for the latest 0.1.50 to see changes [0.1.50 release note](https://github.com/alibaba/flutter_boost/releases)
+ 请查看最新版本0.1.50的release note 确认变更，[0.1.50 release note](https://github.com/alibaba/flutter_boost/releases)。
 
 # FlutterBoost
-A next-generation Flutter-Native hybrid solution. FlutterBoost is a Flutter plugin which enables hybrid integration of Flutter for your existing native apps with minimum efforts.The philosophy of FlutterBoost is to use Flutter as easy as using a WebView. Managing Native pages and Flutter pages at the same time is non-trivial in an existing App. FlutterBoost takes care of page resolution for you. The only thing you need to care about is the name of the page(usually could be an URL). 
-<a name="bf647454"></a>
 
-# Prerequisites
-You need to add Flutter to your project before moving on.The version of the flutter SDK requires v1.5.4-hotfixes, or it will compile error.
-
-# Getting Started
+新一代Flutter-Native混合解决方案。 FlutterBoost是一个Flutter插件，它可以轻松地为现有原生应用程序提供Flutter混合集成方案。FlutterBoost的理念是将Flutter像Webview那样来使用。在现有应用程序中同时管理Native页面和Flutter页面并非易事。 FlutterBoost帮你处理页面的映射和跳转，你只需关心页面的名字和参数即可（通常可以是URL）。
 
 
-## Add a dependency in you Flutter project.
+# 前置条件
+在继续之前，您需要将Flutter集成到你现有的项目中。flutter sdk 的版本需要 v1.5.4-hotfixes，否则会编译失败.
 
-Open you pubspec.yaml and add the following line to dependencies:
+# 安装
 
-```java
+## 在Flutter项目中添加依赖项。
+
+打开pubspec.yaml并将以下行添加到依赖项：
+
+```json
 flutter_boost: ^0.1.54
 ```
 
-or you could rely directly on a Github project tag, for example(recommended)
+或者可以直接依赖github的项目的版本，Tag，pub发布会有延迟，推荐直接依赖Github项目
 
 ```java
+
 flutter_boost:
         git:
             url: 'https://github.com/alibaba/flutter_boost.git'
             ref: '0.1.54'
+            
 ```
-
-
-
-## Integration with Flutter code.
-Add init code to you App
+## Dart代码的集成
+将init代码添加到App App
 
 ```dart
 void main() => runApp(MyApp());
@@ -70,22 +67,21 @@ class _MyAppState extends State<MyApp> {
 }
 ```
 
+## iOS代码集成。
 
-## Integration with iOS code.
+注意：需要将libc++ 加入 "Linked Frameworks and Libraries" 中。
 
-Note: You need to add libc++ into "Linked Frameworks and Libraries" 
+使用FLBFlutterAppDelegate作为AppDelegate的超类
 
-Use FLBFlutterAppDelegate as the superclass of your AppDelegate
-
-```objc
+```objectivec
 @interface AppDelegate : FLBFlutterAppDelegate <UIApplicationDelegate>
 @end
 ```
 
 
-Implement FLBPlatform protocol methods for your App.
+为您的应用程序实现FLBPlatform协议方法。
 
-```objc
+```objectivec
 @interface PlatformRouterImp : NSObject<FLBPlatform>
 
 @property (nonatomic,strong) UINavigationController *navigationController;
@@ -129,19 +125,19 @@ Implement FLBPlatform protocol methods for your App.
 
 
 
-Initialize FlutterBoost with FLBPlatform at the beginning of your App, such as AppDelegate.
+在应用程序开头使用FLBPlatform初始化FlutterBoost。
 
 ```objc
  PlatformRouterImp *router = [PlatformRouterImp new];
- [FlutterBoostPlugin.sharedInstance startFlutterWithPlatform:router
-                                                        onStart:^(FlutterEngine *engine) {
+ [FlutterBoostPlugin.sharedInstance startFlutterWithPlatform：router
+                                                        onStart：^（FlutterEngine *engine）{
                                                             
                                                         }];
 ```
 
-## Integration with Android code.
+## Android代码集成。
 
-Init FlutterBoost in Application.onCreate() 
+在Application.onCreate（）中初始化FlutterBoost
 
 ```java
 public class MyApplication extends FlutterApplication {
@@ -149,8 +145,7 @@ public class MyApplication extends FlutterApplication {
     public void onCreate() {
         super.onCreate();
         FlutterBoostPlugin.init(new IPlatform() {
-
-        @Override
+            @Override
             public Application getApplication() {
                 return MyApplication.this;
             }
@@ -162,7 +157,7 @@ public class MyApplication extends FlutterApplication {
 
             @Override
             public void openContainer(Context context, String url, Map<String, Object> urlParams, int requestCode, Map<String, Object> exts) {
-            		//native open url 
+                PageRouter.openPageByUrl(context,url,urlParams,requestCode);
             }
 
             @Override
@@ -182,28 +177,25 @@ public class MyApplication extends FlutterApplication {
             public int whenEngineStart() {
                 return ANY_ACTIVITY_CREATED;
             }
-
         });
     }
 ```
 
+# 基本用法
+## 概念
 
-# Basic Usage
-## Concepts
+所有页面路由请求都将发送到Native路由器。Native路由器与Native Container Manager通信，Native Container Manager负责构建和销毁Native Containers。
 
-All page routing requests are being sent to the native router. Native router communicates with Native Container Manager, Native Container Manager takes care of building and destroying of Native Containers. 
-
-
-## Use Flutter Boost Native Container to show a Flutter page in native code.
-
-iOS
+## 使用Flutter Boost Native Container用Native代码打开Flutter页面。
 
 ```objc
  FLBFlutterViewContainer *vc = FLBFlutterViewContainer.new;
         [vc setName:name params:params];
         [self.navigationController presentViewController:vc animated:animated completion:^{}];
 ```
-However, in this way, you cannot get the page data result after the page finished. We suggest you implement the platform page router like the way mentioned above. And finally open/close the VC as following:
+
+但是，这种方式无法获取页面返回的数据，建议你按上面的example实现类似于PlatformRouterImp这样的路由器，然后通过以下方式来打开/关闭页面
+
 ```objc
 //push the page
 [FlutterBoostPlugin open:@"first" urlParams:@{kPageCallBackId:@"MycallbackId#1"} exts:@{@"animated":@(YES)} onPageFinished:^(NSDictionary *result) {
@@ -220,7 +212,6 @@ However, in this way, you cannot get the page data result after the page finishe
 //close the page
 [FlutterBoostPlugin close:yourUniqueId result:yourdata exts:exts completion:nil];
 ```
-
 Android
 
 ```java
@@ -229,13 +220,13 @@ public class FlutterPageActivity extends BoostFlutterActivity {
 
     @Override
     public String getContainerUrl() {
-     	//specify the page name register in FlutterBoost
-       return "sample://firstPage";
+        //specify the page name register in FlutterBoost
+        return "sample://firstPage";
     }
 
     @Override
     public Map getContainerUrlParams() {
-    	//params of the page
+        //params of the page
         Map<String,String> params = new HashMap<>();
         params.put("key","value");
         return params;
@@ -243,58 +234,53 @@ public class FlutterPageActivity extends BoostFlutterActivity {
 }
 ```
 
-or
+或者用Fragment
 
 ```java
-
 public class FlutterFragment extends BoostFlutterFragment {
-	  @Override
-     public String getContainerUrl() {
-        return "flutterFragment";
+
+    @Override
+    public String getContainerUrl() {
+        return "sample://firstPage";
     }
 
     @Override
-     public Map getContainerUrlParams() {
+    public Map getContainerUrlParams() {
         Map<String,String> params = new HashMap<>();
-        params.put("tag",getArguments().getString("tag"));
+        params.put("key","value");
         return params;
     }
 }
 ```
 
 
-## Use Flutter Boost to open a page in dart code.
-
+## 使用Flutter Boost在dart代码打开页面。
 Dart
 
-```objc
+```java
 
-FlutterBoost.singleton
-                .open("pagename")
-
-```
-
-## Use Flutter Boost to close a page in dart code.
-
-```objc
-
-FlutterBoost.singleton.close(uniqueId);
+ FlutterBoost.singleton
+                .open("sample://flutterFragmentPage")
 
 ```
 
-# Running the Demo
-Please see the example for details.
 
+## 使用Flutter Boost在dart代码关闭页面。
 
-# License
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
+```java
+ FlutterBoost.singleton.close(uniqueId);
+```
 
+# Examples
+更详细的使用例子请参考Demo
 
-# Problem feedback group（ dingding group)
+# 许可证
+该项目根据MIT许可证授权 - 有关详细信息，请参阅[LICENSE.md]（LICENSE.md）文件
+<a name="Acknowledgments"> </a>
+
+# 问题反馈群（钉钉群)
 
 <img width="200" src="https://img.alicdn.com/tfs/TB1JSzVeYY1gK0jSZTEXXXDQVXa-892-1213.jpg">
-
-
 
 
 ## 关于我们
